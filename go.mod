@@ -1,3 +1,3 @@
-module github.com/gobwas/gtrace
+module github.com/enosi-rl/gtrace
 
-go 1.14
+go 1.17
