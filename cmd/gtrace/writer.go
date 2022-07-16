@@ -1022,6 +1022,9 @@ func (w *Writer) funcParamsUnused(params []Param) {
 	w.code(`(`)
 	for i, p := range params {
 		if i > 0 {
+			if p.IsEllipsis {
+				w.code("...")
+			}
 			w.code(`, `)
 		}
 		w.code(w.typeString(p.Type))
@@ -1032,6 +1035,10 @@ func (w *Writer) funcParamsUnused(params []Param) {
 func (w *Writer) funcParam(p Param) (name string) {
 	name = w.declare(nameParam(p))
 	w.code(name, ` `)
+	if p.IsEllipsis {
+		w.code("...")
+		name += "..."
+	}
 	w.code(w.typeString(p.Type))
 	return name
 }
@@ -1042,6 +1049,9 @@ func (w *Writer) funcParamSign(p Param) {
 		name = "_"
 	}
 	w.code(name, ` `)
+	if p.IsEllipsis {
+		w.code("...")
+	}
 	w.code(w.typeString(p.Type))
 }
 

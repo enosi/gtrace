@@ -18,7 +18,6 @@ import (
 	"reflect"
 	"strings"
 	"text/tabwriter"
-
 	_ "unsafe" // For go:linkname.
 )
 
@@ -367,9 +366,24 @@ func buildFunc(info types.Info, traces map[string]*Trace, fn *ast.FuncType) (ret
 			names = []string{""}
 		}
 		for _, name := range names {
+			isEllipsis := false
+			if ellipsis, ok := p.Type.(*ast.Ellipsis); ok {
+				if isEllipsis = ellipsis.Ellipsis.IsValid(); isEllipsis {
+					if s, ok := t.(*types.Slice); ok {
+						e := s.Elem()
+						if n, ok := e.(*types.Named); ok {
+							t = n.Obj().Type()
+						} else if n, ok := e.(*types.Basic); ok {
+							t = n.Underlying()
+						}
+					}
+				}
+			}
+
 			ret.Params = append(ret.Params, Param{
-				Name: name,
-				Type: t,
+				Name:       name,
+				Type:       t,
+				IsEllipsis: isEllipsis,
 			})
 		}
 	}
@@ -461,8 +475,9 @@ type Hook struct {
 }
 
 type Param struct {
-	Name string // Might be empty.
-	Type types.Type
+	Name       string // Might be empty.
+	Type       types.Type
+	IsEllipsis bool
 }
 
 type FuncResult interface {

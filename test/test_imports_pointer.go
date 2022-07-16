@@ -1,6 +1,6 @@
 package test
 
-import "github.com/gobwas/gtrace/test/internal"
+import "github.com/enosi-rl/gtrace/test/internal"
 
 //go:generate gtrace -v
 

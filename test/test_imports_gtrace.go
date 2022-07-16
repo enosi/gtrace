@@ -5,7 +5,7 @@ package test
 import (
 	"context"
 
-	"github.com/gobwas/gtrace/test/internal"
+	"github.com/enosi-rl/gtrace/test/internal"
 )
 
 // Compose returns a new TraceNoShortcut which has functional fields composed
