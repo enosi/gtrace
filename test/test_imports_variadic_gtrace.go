@@ -58,9 +58,20 @@ func (t TraceVariadic) Compose(x TraceVariadic) (ret TraceVariadic) {
 	default:
 		h1 := t.OnSomethingD
 		h2 := x.OnSomethingD
-		ret.OnSomethingD = func(i int, s string, t ...Type) {
-			h1(i, s, t...)
-			h2(i, s, t...)
+		ret.OnSomethingD = func(i int, s string, t ...Type) func(...Type) {
+			r1 := h1(i, s, t...)
+			r2 := h2(i, s, t...)
+			switch {
+			case r1 == nil:
+				return r2
+			case r2 == nil:
+				return r1
+			default:
+				return func(t ...Type) {
+					r1(t...)
+					r2(t...)
+				}
+			}
 		}
 	}
 	switch {
@@ -71,9 +82,20 @@ func (t TraceVariadic) Compose(x TraceVariadic) (ret TraceVariadic) {
 	default:
 		h1 := t.OnSomethingE
 		h2 := x.OnSomethingE
-		ret.OnSomethingE = func(b bool, f float32, t ...internal.Type) {
-			h1(b, f, t...)
-			h2(b, f, t...)
+		ret.OnSomethingE = func(b bool, f float32, t ...internal.Type) func(bool, ...internal.Type) {
+			r1 := h1(b, f, t...)
+			r2 := h2(b, f, t...)
+			switch {
+			case r1 == nil:
+				return r2
+			case r2 == nil:
+				return r1
+			default:
+				return func(b bool, t ...internal.Type) {
+					r1(b, t...)
+					r2(b, t...)
+				}
+			}
 		}
 	}
 	return ret
@@ -99,19 +121,35 @@ func (t TraceVariadic) onSomethingC(t1 ...internal.Type) {
 	}
 	fn(t1...)
 }
-func (t TraceVariadic) onSomethingD(i int, s string, t1 ...Type) {
+func (t TraceVariadic) onSomethingD(i int, s string, t1 ...Type) func(...Type) {
 	fn := t.OnSomethingD
 	if fn == nil {
-		return
+		return func(...Type) {
+			return
+		}
 	}
-	fn(i, s, t1...)
+	res := fn(i, s, t1...)
+	if res == nil {
+		return func(...Type) {
+			return
+		}
+	}
+	return res
 }
-func (t TraceVariadic) onSomethingE(b bool, f float32, t1 ...internal.Type) {
+func (t TraceVariadic) onSomethingE(b bool, f float32, t1 ...internal.Type) func(bool, ...internal.Type) {
 	fn := t.OnSomethingE
 	if fn == nil {
-		return
+		return func(bool, ...internal.Type) {
+			return
+		}
 	}
-	fn(b, f, t1...)
+	res := fn(b, f, t1...)
+	if res == nil {
+		return func(bool, ...internal.Type) {
+			return
+		}
+	}
+	return res
 }
 func traceVariadicOnSomethingA(t TraceVariadic, e Embeded, s string, integer int, boolean bool, e1 error, r bytes.Reader) {
 	var p Type
@@ -130,7 +168,7 @@ func traceVariadicOnSomethingC(t TraceVariadic) {
 	var p internal.Type
 	t.onSomethingC(p)
 }
-func traceVariadicOnSomethingD(t TraceVariadic, i int, s string, e Embeded, s1 string, integer int, boolean bool, e1 error, r bytes.Reader) {
+func traceVariadicOnSomethingD(t TraceVariadic, i int, s string, e Embeded, s1 string, integer int, boolean bool, e1 error, r bytes.Reader) func(_ Embeded, _ string, integer int, boolean bool, _ error, _ bytes.Reader) {
 	var p Type
 	p.Embeded = e
 	p.String = s1
@@ -138,9 +176,23 @@ func traceVariadicOnSomethingD(t TraceVariadic, i int, s string, e Embeded, s1 s
 	p.Boolean = boolean
 	p.Error = e1
 	p.Reader = r
-	t.onSomethingD(i, s, p)
+	res := t.onSomethingD(i, s, p)
+	return func(e Embeded, s string, integer int, boolean bool, e1 error, r bytes.Reader) {
+		var p Type
+		p.Embeded = e
+		p.String = s
+		p.Integer = integer
+		p.Boolean = boolean
+		p.Error = e1
+		p.Reader = r
+		res(p)
+	}
 }
-func traceVariadicOnSomethingE(t TraceVariadic, b bool, f float32) {
+func traceVariadicOnSomethingE(t TraceVariadic, b bool, f float32) func(bool) {
 	var p internal.Type
-	t.onSomethingE(b, f, p)
+	res := t.onSomethingE(b, f, p)
+	return func(b bool) {
+		var p internal.Type
+		res(b, p)
+	}
 }

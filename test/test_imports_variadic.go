@@ -11,6 +11,6 @@ type TraceVariadic struct {
 	OnSomethingA func(...Type)
 	OnSomethingB func(...string)
 	OnSomethingC func(...internal.Type)
-	OnSomethingD func(int, string, ...Type)
-	OnSomethingE func(bool, float32, ...internal.Type)
+	OnSomethingD func(int, string, ...Type) func(...Type)
+	OnSomethingE func(bool, float32, ...internal.Type) func(bool, ...internal.Type)
 }

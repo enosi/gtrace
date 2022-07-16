@@ -1093,6 +1093,9 @@ func (w *Writer) funcSignatureFlags(fn *Func, flags flags) {
 		if flags.has(docs) && haveNames {
 			w.funcParamSign(p)
 		} else {
+			if p.IsEllipsis {
+				w.code("...")
+			}
 			w.code(w.typeString(p.Type))
 		}
 	}
