@@ -1,3 +1,3 @@
-module github.com/enosi-rl/gtrace
+module github.com/enosi/gtrace
 
 go 1.17
